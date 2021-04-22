@@ -64,7 +64,7 @@ if exist .delete_to_stop (
 	call :get_time %time%
 	call :get_log_file_fullpath
 	
-	title CHIA循环挖矿脚本 - by errcodex - !LOG_FILE:~10,6!
+	title CHIA循环挖矿脚本 - by errcodex - %~d0 - !LOG_FILE:~10,6!
 	echo 正在执行第!CHIA_COUNT!次,LOG:%LOG_PATH%\!LOG_FILE!
 
 	chia plots create -k 32 -u %BUKKIT_COUNT% -b %MEM_USE% -t %TEMP_PATH% -2 %TEMP2_PATH% -d %DEST_PATH% > %LOG_PATH%\!LOG_FILE! 2>&1
