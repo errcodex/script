@@ -33,7 +33,40 @@ echo temp2=$_temp2
 touch /mnt/$1/.delete_to_stop
 mkdir $_log 2>/dev/null
 
-trap "trap - 15 && kill -- -$$" 2 15 EXIT
+#trap "trap - 15 && kill -- -$$" 2 15 EXIT
+trap abort 2 15
+
+# clean dir
+clean()
+{
+	if [ $# != 1 ]; then
+		echo 参数错误 - clean 
+		return 0
+        fi
+
+	_cache=$(ls $1 | wc -l)
+	rm $1 -rf
+	if [ $_cache != 0 ]; then
+		echo 从$1中删除$_cache个缓存文件
+	fi
+}
+#先定义好time防止误删父目录
+_time=0
+abort()
+{
+	echo
+        kill $!
+        if [ $? != 0 ]; then
+                echo 任务结束失败，可能是没有任务在执行，PID: $!
+        else
+                echo 已中止任务，PID: $!
+        fi
+
+	clean $_temp/$_time
+        
+	trap - 15 && kill $$
+        return 0
+}
 
 while true
 do
@@ -42,7 +75,7 @@ do
 	_time=$(date "+%Y%m%d_%H%M%S")
 	
 	echo 正在执行第${_i}次绘图程序,编号 ${_time}
-	
+
 	 ( \
 	 chia plots create -k 32 -b 7000 -u 128 -r 2 -e \
 	-f 99c1fc3fa6916b129439820a1483b0cd730ff29f83c01dae481a47e29efce0790d3c4fd6a0dfaf26661a51447a9e2943 \
@@ -55,13 +88,11 @@ do
 	
 	wait
 
+	clean $_temp/$_time
+
 	if [ $? != 0 ]; then
 		echo 第${_i}次绘图失败,编号 ${_time}
 		_fail=`expr $_fail + 1`
-		if [ -d $_temp/$_time ]; then
-			echo 正在删除失败导致未清理的缓存 $_temp/$_time
-			rm -rf $_temp/$_time
-		fi
 	fi
 
 	if [ ! -f "/mnt/$1/.delete_to_stop" ]; then
